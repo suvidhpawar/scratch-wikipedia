@@ -31,19 +31,14 @@ def get_wikipedia_summary(query):
                 return "Multiple meanings. Be more specific."
         except PageError:
             return "Wikipedia page not found."
-
-        # Trim summary if encoded length exceeds cloud variable limit
         encoded_summary = Encoding.encode(summary)
         while len(str(encoded_summary)) > MAX_LEN and len(summary) > 5:
             summary = summary[:-1]  # remove last char
             encoded_summary = Encoding.encode(summary)
-
         if len(str(encoded_summary)) > MAX_LEN:
             summary = summary[:len(summary) - 3] + "..."
             encoded_summary = Encoding.encode(summary)
-
         return summary
-
     except Exception as e:
         return f"Error accessing Wikipedia: {str(e)[:100]}"
 
@@ -51,7 +46,6 @@ def main():
     session = sa.login(USERNAME, PASSWORD)
     cloud = session.connect_cloud(PROJECT_ID)
     events = cloud.events()
-
     @events.event
     def on_set(activity):
         if activity.var == "input":
@@ -62,14 +56,12 @@ def main():
                 if decoded_input:
                     summary = get_wikipedia_summary(decoded_input)
                     encoded_summary = Encoding.encode(summary)
-
                     print(f"Final encoded length: {len(str(encoded_summary))} chars")
                     cloud.set_var("output", str(encoded_summary))
                 else:
                     cloud.set_var("output", Encoding.encode("Please enter a valid search term."))
             else:
                 cloud.set_var("output", Encoding.encode("Input is empty."))
-
     events.start()
     print("Wikipedia bot running. Press Ctrl+C to stop.")
     try:
